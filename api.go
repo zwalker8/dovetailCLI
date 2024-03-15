@@ -143,6 +143,23 @@ func (api *API) PatchRequest(url string, patch any) *http.Response {
 	return res
 }
 
+func (api *API) DeleteRequest(url string) *http.Response {
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	req.Header.Add("accept", "application/json")
+	req.Header.Add("authorization", fmt.Sprintf("Bearer %v", api.Key))
+
+	res, err := api.Client.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return res
+}
+
 func (api *API) PatchNote(id string, title string, fields Fields) (*Note, *APIError) {
 	var apiResponse Note
 	var apiError APIError
@@ -153,6 +170,15 @@ func (api *API) PatchNote(id string, title string, fields Fields) (*Note, *APIEr
 	}
 
 	res := api.PatchRequest(fmt.Sprintf("%v/%v", api.Routes.Notes, id), patch)
+
+	return DecodeResponse(res, &apiResponse, &apiError)
+}
+
+func (api *API) DeleteNote(id string) (*Note, *APIError) {
+	var apiResponse Note
+	var apiError APIError
+
+	res := api.DeleteRequest(fmt.Sprintf("%v/%v", api.Routes.Notes, id))
 
 	return DecodeResponse(res, &apiResponse, &apiError)
 }
