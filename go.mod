@@ -2,7 +2,10 @@ module github.com/zwalker8/dovetailCLI
 
 go 1.21.0
 
-require github.com/charmbracelet/huh v0.3.0
+require (
+	github.com/charmbracelet/huh v0.3.0
+	github.com/joho/godotenv v1.5.1
+)
 
 require (
 	github.com/atotto/clipboard v0.1.4 // indirect
@@ -12,7 +15,6 @@ require (
 	github.com/charmbracelet/bubbletea v0.25.0 // indirect
 	github.com/charmbracelet/lipgloss v0.9.1 // indirect
 	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect
-	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
