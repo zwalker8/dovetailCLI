@@ -13,7 +13,7 @@ import (
 func DecodeResponse[D any, E any](res *http.Response, dst *D, errorStruct *E) (*D, *E) {
 	defer res.Body.Close()
 
-	if res.StatusCode != http.StatusOK {
+	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusCreated {
 		err := json.NewDecoder(res.Body).Decode(errorStruct)
 		if err != nil {
 			log.Fatal(err)
@@ -44,11 +44,11 @@ func PrettyPrint(input any) {
 	fmt.Println(string(prettyFmt))
 }
 
-func (api *API) LoadToken() {
+func GetAPIKEY() string {
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatalf("Error loading .env file: %s", err)
 	}
 
-	api.Key = os.Getenv("API_KEY")
+	return os.Getenv("API_KEY")
 }

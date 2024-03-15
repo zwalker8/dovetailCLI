@@ -8,6 +8,7 @@ func main() {
 	client := &http.Client{}
 	api := &API{
 		Client: client,
+		Key:    GetAPIKEY(),
 		Routes: Routes{
 			TokenInfo:  "https://dovetail.com/api/v1/token/info",
 			Highlights: "https://dovetail.com/api/v1/highlights",

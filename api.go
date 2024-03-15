@@ -38,95 +38,19 @@ type Page struct {
 	NextCursor *string `json:"next_cursor,omitempty"`
 }
 
-func (api *API) GetRequest(url string) *http.Response {
-	client := api.Client
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		log.Fatal(err)
+func (api *API) SendRequest(method string, url string, content any) *http.Response {
+	var body bytes.Buffer
+
+	if content != nil {
+		json, err := json.Marshal(content)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		body = *bytes.NewBuffer(json)
 	}
 
-	req.Header.Add("accept", "application/json")
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %v", api.Key))
-
-	res, err := client.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return res
-}
-
-func (api *API) TokenInfo() (*TokenInfo, *APIError) {
-	res := api.GetRequest(api.Routes.TokenInfo)
-	defer res.Body.Close()
-
-	var apiResponse TokenInfo
-	var apiError APIError
-
-	return DecodeResponse(res, &apiResponse, &apiError)
-}
-
-func (api *API) ListHighlights() (*ListHighlights, *APIError) {
-	var apiResponse ListHighlights
-	var apiError APIError
-	res := api.GetRequest(api.Routes.Highlights)
-
-	return DecodeResponse(res, &apiResponse, &apiError)
-}
-
-func (api *API) ListInsights() (*ListInsights, *APIError) {
-	var apiResponse ListInsights
-	var apiError APIError
-	res := api.GetRequest(api.Routes.Insights)
-
-	return DecodeResponse(res, &apiResponse, &apiError)
-}
-
-func (api *API) ListProjects() (*ListProjects, *APIError) {
-	var apiResponse ListProjects
-	var apiError APIError
-
-	res := api.GetRequest(api.Routes.Projects)
-
-	return DecodeResponse(res, &apiResponse, &apiError)
-}
-
-func (api *API) ListNotes() (*ListNotes, *APIError) {
-	var apiResponse ListNotes
-	var apiError APIError
-
-	res := api.GetRequest(api.Routes.Notes)
-
-	return DecodeResponse(res, &apiResponse, &apiError)
-}
-
-func (api *API) GetNote(id string) (*Note, *APIError) {
-	var apiResponse Note
-	var apiError APIError
-
-	res := api.GetRequest(fmt.Sprintf("%v/%v", api.Routes.Notes, id))
-
-	return DecodeResponse(res, &apiResponse, &apiError)
-}
-
-func (api *API) GetFile(id string) (*File, *APIError) {
-	var apiResponse File
-	var apiError APIError
-
-	res := api.GetRequest(fmt.Sprintf("%v/%v", api.Routes.Files, id))
-
-	return DecodeResponse(res, &apiResponse, &apiError)
-}
-
-func (api *API) PatchRequest(url string, patch any) *http.Response {
-	json, err := json.Marshal(patch)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	body := bytes.NewBuffer(json)
-
-	req, err := http.NewRequest(http.MethodPatch, url, body)
+	req, err := http.NewRequest(method, url, &body)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -141,44 +65,4 @@ func (api *API) PatchRequest(url string, patch any) *http.Response {
 	}
 
 	return res
-}
-
-func (api *API) DeleteRequest(url string) *http.Response {
-	req, err := http.NewRequest(http.MethodDelete, url, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	req.Header.Add("accept", "application/json")
-	req.Header.Add("authorization", fmt.Sprintf("Bearer %v", api.Key))
-
-	res, err := api.Client.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return res
-}
-
-func (api *API) PatchNote(id string, title string, fields Fields) (*Note, *APIError) {
-	var apiResponse Note
-	var apiError APIError
-
-	patch := PatchNote{
-		Title:  title,
-		Fields: fields,
-	}
-
-	res := api.PatchRequest(fmt.Sprintf("%v/%v", api.Routes.Notes, id), patch)
-
-	return DecodeResponse(res, &apiResponse, &apiError)
-}
-
-func (api *API) DeleteNote(id string) (*Note, *APIError) {
-	var apiResponse Note
-	var apiError APIError
-
-	res := api.DeleteRequest(fmt.Sprintf("%v/%v", api.Routes.Notes, id))
-
-	return DecodeResponse(res, &apiResponse, &apiError)
 }

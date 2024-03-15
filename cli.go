@@ -7,7 +7,6 @@ import (
 )
 
 func (api *API) MainMenu() {
-	api.LoadToken()
 	var choice string
 
 	form := huh.NewForm(huh.NewGroup(
