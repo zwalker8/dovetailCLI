@@ -7,6 +7,7 @@ import (
 )
 
 func (api *API) MainMenu() {
+	api.LoadToken()
 	var choice string
 
 	form := huh.NewForm(huh.NewGroup(
@@ -49,4 +50,19 @@ func (api *API) ChooseNotes() {
 	}
 
 	api.ListNotes()
+}
+
+func (api *API) GetResponse(choice string) {
+	switch choice {
+	case "token":
+		api.TokenInfo()
+	case "highlights":
+		api.ListHighlights()
+	case "insights":
+		api.ListInsights()
+	case "projects":
+		api.ListProjects()
+	case "notes":
+		api.ChooseNotes()
+	}
 }

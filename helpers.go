@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+
+	"github.com/joho/godotenv"
 )
 
 func DecodeResponse[D any, E any](res *http.Response, dst *D, errorStruct *E) (*D, *E) {
@@ -39,4 +42,13 @@ func PrettyPrint(input any) {
 		log.Fatal(err)
 	}
 	fmt.Println(string(prettyFmt))
+}
+
+func (api *API) LoadToken() {
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatalf("Error loading .env file: %s", err)
+	}
+
+	api.Key = os.Getenv("API_KEY")
 }
