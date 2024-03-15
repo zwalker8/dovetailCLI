@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -112,6 +114,45 @@ func (api *API) GetFile(id string) (*File, *APIError) {
 	var apiError APIError
 
 	res := api.GetRequest(fmt.Sprintf("%v/%v", api.Routes.Files, id))
+
+	return DecodeResponse(res, &apiResponse, &apiError)
+}
+
+func (api *API) PatchRequest(url string, patch any) *http.Response {
+	json, err := json.Marshal(patch)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	body := bytes.NewBuffer(json)
+
+	req, err := http.NewRequest(http.MethodPatch, url, body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	req.Header.Add("accept", "application/json")
+	req.Header.Add("content-type", "application/json")
+	req.Header.Add("authorization", fmt.Sprintf("Bearer %v", api.Key))
+
+	res, err := api.Client.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return res
+}
+
+func (api *API) PatchNote(id string, title string, fields Fields) (*Note, *APIError) {
+	var apiResponse Note
+	var apiError APIError
+
+	patch := PatchNote{
+		Title:  title,
+		Fields: fields,
+	}
+
+	res := api.PatchRequest(fmt.Sprintf("%v/%v", api.Routes.Notes, id), patch)
 
 	return DecodeResponse(res, &apiResponse, &apiError)
 }

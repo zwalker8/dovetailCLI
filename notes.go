@@ -12,6 +12,11 @@ type ListNotes struct {
 	Page Page
 }
 
+type Fields []struct {
+	Label string
+	Value any
+}
+
 type Note struct {
 	Data struct {
 		ID      string
@@ -20,11 +25,8 @@ type Note struct {
 		Project struct {
 			ID string
 		}
-		Fields []struct {
-			Label string
-			Value any
-		}
-		Files []struct {
+		Fields Fields
+		Files  []struct {
 			ID     string
 			Name   string
 			Type   *string
@@ -45,13 +47,15 @@ type ExportNote struct {
 }
 
 type ImportFile struct {
-	Fields []struct {
-		Label string
-		Value any
-	}
+	Fields     Fields
 	MimeType   string `json:"mime_type"`
 	ProjectID  string `json:"project_id"`
 	Title      string
 	Transcribe bool
 	Url        string
+}
+
+type PatchNote struct {
+	Title  string
+	Fields Fields
 }
