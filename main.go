@@ -1,17 +1,7 @@
 package main
 
 import (
-	//"net/http"
-	"log"
 	"net/http"
-
-	"github.com/charmbracelet/huh"
-)
-
-var (
-	choice     string
-	singleNote bool
-	noteID     string
 )
 
 func (api *API) GetResponse(choice string) {
@@ -25,23 +15,7 @@ func (api *API) GetResponse(choice string) {
 	case "projects":
 		api.ListProjects()
 	case "notes":
-		huh.NewConfirm().
-			Title("View a single note?").
-			Affirmative("Yes.").
-			Negative("No.").
-			Value(&singleNote).Run()
-
-		if singleNote == true {
-			huh.NewInput().
-				Title("What's the ID").
-				Prompt("?").
-				Value(&noteID).Run()
-			api.GetNote(noteID)
-			return
-		}
-
-		api.ListNotes()
-
+		api.ChooseNotes()
 	}
 }
 
@@ -67,22 +41,5 @@ func main() {
 	// api.ListNotes()
 	// api.GetNote("6FtiqmKwLt9jvEKpnmTPzC")
 
-	form := huh.NewForm(huh.NewGroup(
-		huh.NewSelect[string]().
-			Title("What would you like to do?").
-			Options(
-				huh.NewOption("Get token info", "token"),
-				huh.NewOption("Get highlights", "highlights"),
-				huh.NewOption("Get insights", "insights"),
-				huh.NewOption("Get projects", "projects"),
-				huh.NewOption("Get notes", "notes"),
-			).
-			Value(&choice)))
-
-	err := form.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	api.GetResponse(choice)
+	api.MainMenu()
 }
