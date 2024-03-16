@@ -19,7 +19,7 @@ func DecodeResponse[D any, E any](res *http.Response, dst *D, errorStruct *E) (*
 			log.Fatal(err)
 		}
 
-		PrettyPrint(errorStruct)
+		// PrettyPrint(errorStruct)
 
 		// fmt.Printf("%+v", errorStruct)
 		return nil, errorStruct
@@ -30,7 +30,7 @@ func DecodeResponse[D any, E any](res *http.Response, dst *D, errorStruct *E) (*
 		log.Fatal(err)
 	}
 
-	PrettyPrint(dst)
+	// PrettyPrint(dst)
 	// fmt.Printf("%+v", dst)
 
 	return dst, nil
