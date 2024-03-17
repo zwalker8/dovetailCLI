@@ -1,6 +1,8 @@
-package main
+package api
 
-import "net/http"
+import (
+	"net/http"
+)
 
 type TokenInfo struct {
 	Data struct {

@@ -2,14 +2,20 @@ package main
 
 import (
 	"net/http"
+
+	"github.com/zwalker8/dovetailCLI/api"
 )
+
+type Application struct {
+	API *api.API
+}
 
 func main() {
 	client := &http.Client{}
-	api := &API{
+	api := &api.API{
 		Client: client,
 		Key:    GetAPIKEY(),
-		Routes: Routes{
+		Routes: api.Routes{
 			TokenInfo:  "https://dovetail.com/api/v1/token/info",
 			Highlights: "https://dovetail.com/api/v1/highlights",
 			Insights:   "https://dovetail.com/api/v1/insights",
@@ -19,5 +25,11 @@ func main() {
 		},
 	}
 
-	api.MainMenu()
+	app := &Application{
+		API: api,
+	}
+
+	app.MainMenu()
+
+	// app.API.ListNotes()
 }

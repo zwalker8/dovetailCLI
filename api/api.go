@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"bytes"
@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/charmbracelet/huh/spinner"
 )
 
 type Routes struct {
@@ -59,10 +61,18 @@ func (api *API) SendRequest(method string, url string, content any) *http.Respon
 	req.Header.Add("content-type", "application/json")
 	req.Header.Add("authorization", fmt.Sprintf("Bearer %v", api.Key))
 
-	res, err := api.Client.Do(req)
-	if err != nil {
-		log.Fatal(err)
+	c := make(chan *http.Response, 1)
+
+	load := func() {
+		res, err := api.Client.Do(req)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		c <- res
 	}
 
-	return res
+	spinner.New().Action(load).Run()
+
+	return <-c
 }

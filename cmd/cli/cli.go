@@ -7,7 +7,7 @@ import (
 	"github.com/charmbracelet/huh"
 )
 
-func (api *API) MainMenu() {
+func (app *Application) MainMenu() {
 	var choice string
 
 	for choice != "exit" {
@@ -30,11 +30,12 @@ func (api *API) MainMenu() {
 			log.Fatal(err)
 		}
 
-		api.GetResponse(choice)
+		app.GetResponse(choice)
+
 	}
 }
 
-func (api *API) ChooseNotes() {
+func (app *Application) ChooseNotes() {
 	var option string
 
 	huh.NewSelect[string]().
@@ -47,14 +48,14 @@ func (api *API) ChooseNotes() {
 		Value(&option).Run()
 
 	if option == "all" {
-		n, _ := api.ListNotes()
+		n, _ := app.API.ListNotes()
 		PrettyPrint(n)
 		return
 	}
 
 	var ids []string
 
-	notes, err := api.ListNotes()
+	notes, err := app.API.ListNotes()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -74,7 +75,7 @@ func (api *API) ChooseNotes() {
 	for _, id := range ids {
 		switch option {
 		case "get":
-			n, _ := api.GetNote(id)
+			n, _ := app.API.GetNote(id)
 			PrettyPrint(n)
 		case "delete":
 			var confirmed bool
@@ -85,14 +86,14 @@ func (api *API) ChooseNotes() {
 				Value(&confirmed).Run()
 
 			if confirmed {
-				n, _ := api.DeleteNote(id)
+				n, _ := app.API.DeleteNote(id)
 				fmt.Printf("Deleted: %v\n", n.Data.Title)
 			}
 		}
 	}
 }
 
-func (api *API) ChooseFile() {
+func (app *Application) ChooseFile() {
 	var fileID string
 
 	huh.NewInput().
@@ -100,22 +101,25 @@ func (api *API) ChooseFile() {
 		Prompt("?").
 		Value(&fileID).Run()
 
-	api.GetFile(fileID)
+	app.API.GetFile(fileID)
 }
 
-func (api *API) GetResponse(choice string) {
+func (app *Application) GetResponse(choice string) {
 	switch choice {
 	case "token":
-		api.TokenInfo()
+		info, _ := app.API.TokenInfo()
+		PrettyPrint(info)
 	case "highlights":
-		api.ListHighlights()
+		app.API.ListHighlights()
 	case "insights":
-		api.ListInsights()
+		app.API.ListInsights()
 	case "projects":
-		api.ListProjects()
+		app.API.ListProjects()
 	case "notes":
-		api.ChooseNotes()
+		app.ChooseNotes()
 	case "file":
-		api.ChooseFile()
+		app.ChooseFile()
+	case "exit":
+		return
 	}
 }
