@@ -1,6 +1,9 @@
 package api
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 type ListHighlights struct {
 	Data []struct {
@@ -16,10 +19,29 @@ type ListHighlights struct {
 	Page Page
 }
 
-func (api *API) ListHighlights() (*ListHighlights, *APIError) {
+func (api *API) ListHighlights(page string, projects ...string) (*ListHighlights, *APIError) {
 	var apiResponse ListHighlights
 	var apiError APIError
-	res := api.SendRequest(http.MethodGet, api.Routes.Highlights, nil)
+
+	url := api.Routes.Highlights + JoinQueryParams(page, projects...)
+
+	res := api.SendRequest(http.MethodGet, url, nil)
 
 	return DecodeResponse(res, &apiResponse, &apiError)
+}
+
+func (h *ListHighlights) Print() {
+	if len(h.Data) == 0 {
+		fmt.Println("No highlights for this project")
+		return
+	}
+
+	for _, highlight := range h.Data {
+		if len(highlight.Tags) != 0 {
+			fmt.Printf("Title: %v\n", highlight.Tags[0].Title)
+		}
+		if highlight.Text != nil {
+			fmt.Printf("Text: %v\n\n", *highlight.Text)
+		}
+	}
 }

@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/charmbracelet/huh"
+	"github.com/zwalker8/dovetailCLI/api"
 )
 
 func (app *Application) MainMenu() {
@@ -13,14 +14,14 @@ func (app *Application) MainMenu() {
 	for choice != "exit" {
 		form := huh.NewForm(huh.NewGroup(
 			huh.NewSelect[string]().
-				Title("What would you like to do?").
+				Title("What would you like to access?").
 				Options(
-					huh.NewOption("Get Token Info", "token"),
-					huh.NewOption("List Highlights", "highlights"),
-					huh.NewOption("List Insights", "insights"),
-					huh.NewOption("List projects", "projects"),
+					huh.NewOption("Token Info", "token"),
+					huh.NewOption("Highlights", "highlights"),
+					huh.NewOption("Insights", "insights"),
+					huh.NewOption("Projects", "projects"),
 					huh.NewOption("Notes", "notes"),
-					huh.NewOption("Get File", "file"),
+					huh.NewOption("Files", "files"),
 					huh.NewOption("Exit", "exit"),
 				).
 				Value(&choice)))
@@ -38,24 +39,25 @@ func (app *Application) MainMenu() {
 func (app *Application) ChooseNotes() {
 	var option string
 
-	huh.NewSelect[string]().
+	projects := app.FilterProjects()
+
+	huh.NewForm(huh.NewGroup(huh.NewSelect[string]().
 		Title("Choose an option").
 		Options(
 			huh.NewOption("List all notes", "all"),
-			huh.NewOption("Get single note", "get"),
+			huh.NewOption("Select indvidual notes", "select"),
 			huh.NewOption("Delete note", "delete"),
 		).
-		Value(&option).Run()
+		Value(&option))).Run()
 
 	if option == "all" {
-		n, _ := app.API.ListNotes()
-		PrettyPrint(n)
+		PrettyPrint(app.API.ListNotes("", projects...))
 		return
 	}
 
 	var ids []string
 
-	notes, err := app.API.ListNotes()
+	notes, err := app.API.ListNotes("", projects...)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -63,20 +65,24 @@ func (app *Application) ChooseNotes() {
 	options := []huh.Option[string]{}
 
 	for _, note := range notes.Data {
-		options = append(options, huh.NewOption(
-			note.Title, note.ID))
+		if note.Title == "" {
+			note.Title = "Untitled"
+		}
+		if !note.Deleted {
+			options = append(options, huh.NewOption(
+				note.Title, note.ID))
+		}
 	}
 
-	huh.NewMultiSelect[string]().
+	huh.NewForm(huh.NewGroup(huh.NewMultiSelect[string]().
 		Options(options...).
 		Title("Notes").
-		Value(&ids).Run()
+		Value(&ids))).Run()
 
 	for _, id := range ids {
 		switch option {
-		case "get":
-			n, _ := app.API.GetNote(id)
-			PrettyPrint(n)
+		case "select":
+			PrettyPrint(app.API.GetNote(id))
 		case "delete":
 			var confirmed bool
 			huh.NewConfirm().
@@ -101,23 +107,57 @@ func (app *Application) ChooseFile() {
 		Prompt("?").
 		Value(&fileID).Run()
 
-	app.API.GetFile(fileID)
+	PrettyPrint(app.API.GetFile(fileID))
+}
+
+func (app *Application) FilterProjects() []string {
+	var projectIDS []string
+
+	projectOptions := []huh.Option[string]{}
+	projects, _ := app.API.ListProjects()
+	for _, project := range projects.Data {
+		projectOptions = append(projectOptions, huh.NewOption(project.Title, project.ID))
+	}
+
+	huh.NewForm(huh.NewGroup(huh.NewMultiSelect[string]().
+		Title("Choose Project(s) or none for all Projects").
+		Options(
+			projectOptions...,
+		).
+		Value(&projectIDS))).Run()
+
+	return projectIDS
+}
+
+func (app *Application) ChooseHighlights() {
+	projects := app.FilterProjects()
+	h, err := app.API.ListHighlights("", projects...)
+
+	PrettyPrint(h, err)
+
+	paginateFunc := func(page string) (*string, *api.APIError) {
+		h, err := app.API.ListHighlights(page, projects...)
+		PrettyPrint(h, err)
+
+		return h.Page.NextCursor, err
+	}
+	// fmt.Println(h.Page.TotalCount)
+	Paginate(h.Page, paginateFunc)
 }
 
 func (app *Application) GetResponse(choice string) {
 	switch choice {
 	case "token":
-		info, _ := app.API.TokenInfo()
-		PrettyPrint(info)
+		PrettyPrint(app.API.TokenInfo())
 	case "highlights":
-		app.API.ListHighlights()
+		app.ChooseHighlights()
 	case "insights":
-		app.API.ListInsights()
+		PrettyPrint(app.API.ListInsights(""))
 	case "projects":
-		app.API.ListProjects()
+		PrettyPrint(app.API.ListProjects())
 	case "notes":
 		app.ChooseNotes()
-	case "file":
+	case "files":
 		app.ChooseFile()
 	case "exit":
 		return

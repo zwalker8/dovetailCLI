@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -19,4 +20,9 @@ func (api *API) TokenInfo() (*TokenInfo, *APIError) {
 	var apiError APIError
 
 	return DecodeResponse(res, &apiResponse, &apiError)
+}
+
+func (info *TokenInfo) Print() {
+	fmt.Printf("ID: %v\n", info.Data.ID)
+	fmt.Printf("Subdomain: %v\n", info.Data.Subdomain)
 }

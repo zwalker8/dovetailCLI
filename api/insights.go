@@ -1,6 +1,9 @@
 package api
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 type ListInsights struct {
 	Data []struct {
@@ -12,10 +15,26 @@ type ListInsights struct {
 	Page Page
 }
 
-func (api *API) ListInsights() (*ListInsights, *APIError) {
+func (api *API) ListInsights(page string, projects ...string) (*ListInsights, *APIError) {
 	var apiResponse ListInsights
 	var apiError APIError
-	res := api.SendRequest(http.MethodGet, api.Routes.Insights, nil)
+
+	url := api.Routes.Insights + JoinQueryParams(page, projects...)
+
+	res := api.SendRequest(http.MethodGet, url, nil)
 
 	return DecodeResponse(res, &apiResponse, &apiError)
+}
+
+func (i *ListInsights) Print() {
+	if len(i.Data) == 0 {
+		fmt.Println("No insights for this project")
+		return
+	}
+
+	for _, insight := range i.Data {
+		if insight.Title != "" {
+			fmt.Printf("%v\n\n", insight.Title)
+		}
+	}
 }

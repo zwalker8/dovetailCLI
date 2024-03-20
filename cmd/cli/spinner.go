@@ -9,7 +9,7 @@ func Load(app *Application) {
 	c := make(chan *api.ListNotes, 1)
 
 	action := func() {
-		notes, _ := app.API.ListNotes()
+		notes, _ := app.API.ListNotes("")
 		c <- notes
 
 		// time.Sleep(2 * time.Second)

@@ -65,11 +65,13 @@ type PatchNote struct {
 	Fields Fields `json:"fields"`
 }
 
-func (api *API) ListNotes() (*ListNotes, *APIError) {
+func (api *API) ListNotes(page string, projects ...string) (*ListNotes, *APIError) {
 	var apiResponse ListNotes
 	var apiError APIError
 
-	res := api.SendRequest(http.MethodGet, api.Routes.Notes, nil)
+	url := api.Routes.Notes + JoinQueryParams(page, projects...)
+
+	res := api.SendRequest(http.MethodGet, url, nil)
 
 	return DecodeResponse(res, &apiResponse, &apiError)
 }
@@ -84,16 +86,11 @@ func (api *API) GetNote(id string) (*Note, *APIError) {
 	return DecodeResponse(res, &apiResponse, &apiError)
 }
 
-func (api *API) PatchNote(id string, title string, fields Fields) (*Note, *APIError) {
+func (api *API) PatchNote(noteID string, patch PatchNote) (*Note, *APIError) {
 	var apiResponse Note
 	var apiError APIError
 
-	url := fmt.Sprintf("%v/%v", api.Routes.Notes, id)
-
-	patch := PatchNote{
-		Title:  title,
-		Fields: fields,
-	}
+	url := fmt.Sprintf("%v/%v", api.Routes.Notes, noteID)
 
 	res := api.SendRequest(http.MethodPatch, url, patch)
 
@@ -130,4 +127,31 @@ func (api *API) FileToNote(fileUrl string, fields Fields, mimeType string, proje
 	res := api.SendRequest(http.MethodPost, url, file)
 
 	return DecodeResponse(res, &apiResponse, &apiError)
+}
+
+func (notes *ListNotes) Print() {
+	for _, note := range notes.Data {
+		fmt.Println(note.Title)
+	}
+}
+
+func (note *Note) Print() {
+	fmt.Println(note.Data.Title)
+	fmt.Printf("ID: %v\n", note.Data.ID)
+	fmt.Println("Files:")
+
+	if len(note.Data.Files) == 0 {
+		fmt.Println("None")
+		return
+	}
+
+	for _, file := range note.Data.Files {
+		fmt.Printf("%v Type: ", file.Name)
+		if file.Type != nil {
+			fmt.Println(*file.Type)
+			return
+		}
+		fmt.Println("unknown")
+
+	}
 }

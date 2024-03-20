@@ -1,6 +1,9 @@
 package api
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 type ListProjects struct {
 	Data []struct {
@@ -20,7 +23,15 @@ func (api *API) ListProjects() (*ListProjects, *APIError) {
 	var apiResponse ListProjects
 	var apiError APIError
 
-	res := api.SendRequest(http.MethodGet, api.Routes.Projects, nil)
+	url := api.Routes.Projects
+
+	res := api.SendRequest(http.MethodGet, url, nil)
 
 	return DecodeResponse(res, &apiResponse, &apiError)
+}
+
+func (p *ListProjects) Print() {
+	for _, project := range p.Data {
+		fmt.Println(project.Title)
+	}
 }

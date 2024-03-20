@@ -30,6 +30,7 @@ func main() {
 	}
 
 	app.MainMenu()
+	// fmt.Println(app.API.FilterProjects())
 
 	// app.API.ListNotes()
 }

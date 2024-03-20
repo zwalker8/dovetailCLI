@@ -24,3 +24,12 @@ func (api *API) GetFile(id string) (*File, *APIError) {
 
 	return DecodeResponse(res, &apiResponse, &apiError)
 }
+
+func (file *File) Print() {
+	fmt.Printf("%v \n Type: ", file.Data.Name)
+	if file.Data.Type != nil {
+		fmt.Println(*file.Data.Type)
+		return
+	}
+	fmt.Println("Unknown")
+}

@@ -76,3 +76,9 @@ func (api *API) SendRequest(method string, url string, content any) *http.Respon
 
 	return <-c
 }
+
+func (apiError *APIError) Print() {
+	for _, err := range apiError.Errors {
+		fmt.Printf("%v: %v\n", err.Title, err.Message)
+	}
+}
