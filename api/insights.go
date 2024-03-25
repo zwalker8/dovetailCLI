@@ -15,11 +15,11 @@ type ListInsights struct {
 	Page Page
 }
 
-func (api *API) ListInsights(page string, projects ...string) (*ListInsights, *APIError) {
+func (api *API) ListInsights(page string, limit uint8, projects ...string) (*ListInsights, *APIError) {
 	var apiResponse ListInsights
 	var apiError APIError
 
-	url := api.Routes.Insights + JoinQueryParams(page, projects...)
+	url := api.Routes.Insights + JoinQueryParams(page, limit, projects...)
 
 	res := api.SendRequest(http.MethodGet, url, nil)
 
@@ -37,4 +37,8 @@ func (i *ListInsights) Print() {
 			fmt.Printf("%v\n\n", insight.Title)
 		}
 	}
+}
+
+func (i *ListInsights) NextPage() Page {
+	return i.Page
 }

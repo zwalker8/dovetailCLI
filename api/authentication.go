@@ -24,5 +24,5 @@ func (api *API) TokenInfo() (*TokenInfo, *APIError) {
 
 func (info *TokenInfo) Print() {
 	fmt.Printf("ID: %v\n", info.Data.ID)
-	fmt.Printf("Subdomain: %v\n", info.Data.Subdomain)
+	fmt.Printf("Subdomain: %v\n\n", info.Data.Subdomain)
 }

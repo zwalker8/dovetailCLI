@@ -19,11 +19,11 @@ type ListProjects struct {
 	Page Page
 }
 
-func (api *API) ListProjects() (*ListProjects, *APIError) {
+func (api *API) ListProjects(page string, limit uint8) (*ListProjects, *APIError) {
 	var apiResponse ListProjects
 	var apiError APIError
 
-	url := api.Routes.Projects
+	url := api.Routes.Projects + JoinQueryParams(page, limit)
 
 	res := api.SendRequest(http.MethodGet, url, nil)
 
@@ -31,7 +31,15 @@ func (api *API) ListProjects() (*ListProjects, *APIError) {
 }
 
 func (p *ListProjects) Print() {
+	if len(p.Data) == 0 {
+		fmt.Println("No projects to display")
+		return
+	}
 	for _, project := range p.Data {
 		fmt.Println(project.Title)
 	}
+}
+
+func (p *ListProjects) NextPage() Page {
+	return p.Page
 }

@@ -65,11 +65,11 @@ type PatchNote struct {
 	Fields Fields `json:"fields"`
 }
 
-func (api *API) ListNotes(page string, projects ...string) (*ListNotes, *APIError) {
+func (api *API) ListNotes(page string, limit uint8, projects ...string) (*ListNotes, *APIError) {
 	var apiResponse ListNotes
 	var apiError APIError
 
-	url := api.Routes.Notes + JoinQueryParams(page, projects...)
+	url := api.Routes.Notes + JoinQueryParams(page, limit, projects...)
 
 	res := api.SendRequest(http.MethodGet, url, nil)
 
@@ -130,8 +130,16 @@ func (api *API) FileToNote(fileUrl string, fields Fields, mimeType string, proje
 }
 
 func (notes *ListNotes) Print() {
+	if len(notes.Data) == 0 {
+		fmt.Println("No notes for this project")
+		return
+	}
 	for _, note := range notes.Data {
-		fmt.Println(note.Title)
+		if note.Title != "" {
+			fmt.Println(note.Title)
+		} else {
+			fmt.Println("Untitled")
+		}
 	}
 }
 
@@ -146,12 +154,16 @@ func (note *Note) Print() {
 	}
 
 	for _, file := range note.Data.Files {
-		fmt.Printf("%v Type: ", file.Name)
+		fmt.Printf("Name: %v, Type: ", file.Name)
 		if file.Type != nil {
 			fmt.Println(*file.Type)
-			return
+		} else {
+			fmt.Println("Unknown")
 		}
-		fmt.Println("unknown")
 
 	}
+}
+
+func (notes *ListNotes) NextPage() Page {
+	return notes.Page
 }

@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/charmbracelet/huh"
-	"github.com/zwalker8/dovetailCLI/api"
 )
 
 func (app *Application) MainMenu() {
@@ -38,39 +37,45 @@ func (app *Application) MainMenu() {
 
 func (app *Application) ChooseNotes() {
 	var option string
+	var ids []string
 
 	projects := app.FilterProjects()
 
 	huh.NewForm(huh.NewGroup(huh.NewSelect[string]().
 		Title("Choose an option").
 		Options(
-			huh.NewOption("List all notes", "all"),
-			huh.NewOption("Select indvidual notes", "select"),
-			huh.NewOption("Delete note", "delete"),
+			huh.NewOption("Display all notes", "all"),
+			huh.NewOption("Display select notes", "select"),
+			huh.NewOption("Delete notes", "delete"),
 		).
 		Value(&option))).Run()
 
-	if option == "all" {
-		PrettyPrint(app.API.ListNotes("", projects...))
+	notePages, err := GetAllPages(app.API.ListNotes, 10, projects...)
+	if err != nil {
+		PrettyPrint(err)
 		return
 	}
 
-	var ids []string
-
-	notes, err := app.API.ListNotes("", projects...)
-	if err != nil {
-		log.Fatal(err)
+	if option == "all" {
+		var items []Printable
+		for _, page := range notePages {
+			items = append(items, page)
+		}
+		Paginate(items...)
+		return
 	}
 
 	options := []huh.Option[string]{}
 
-	for _, note := range notes.Data {
-		if note.Title == "" {
-			note.Title = "Untitled"
-		}
-		if !note.Deleted {
-			options = append(options, huh.NewOption(
-				note.Title, note.ID))
+	for _, page := range notePages {
+		for _, note := range page.Data {
+			if note.Title == "" {
+				note.Title = "Untitled"
+			}
+			if !note.Deleted {
+				options = append(options, huh.NewOption(
+					note.Title, note.ID))
+			}
 		}
 	}
 
@@ -114,13 +119,19 @@ func (app *Application) FilterProjects() []string {
 	var projectIDS []string
 
 	projectOptions := []huh.Option[string]{}
-	projects, _ := app.API.ListProjects()
-	for _, project := range projects.Data {
-		projectOptions = append(projectOptions, huh.NewOption(project.Title, project.ID))
+	pages, err := app.GetAllProjects(100)
+	if err != nil {
+		PrettyPrint(err)
+	}
+
+	for _, projects := range pages {
+		for _, project := range projects.Data {
+			projectOptions = append(projectOptions, huh.NewOption(project.Title, project.ID))
+		}
 	}
 
 	huh.NewForm(huh.NewGroup(huh.NewMultiSelect[string]().
-		Title("Choose Project(s) or none for all Projects").
+		Title("Choose Project(s)").
 		Options(
 			projectOptions...,
 		).
@@ -129,20 +140,50 @@ func (app *Application) FilterProjects() []string {
 	return projectIDS
 }
 
-func (app *Application) ChooseHighlights() {
+func (app *Application) DisplayHighlights() {
 	projects := app.FilterProjects()
-	h, err := app.API.ListHighlights("", projects...)
+	var items []Printable
 
-	PrettyPrint(h, err)
-
-	paginateFunc := func(page string) (*string, *api.APIError) {
-		h, err := app.API.ListHighlights(page, projects...)
-		PrettyPrint(h, err)
-
-		return h.Page.NextCursor, err
+	highlightPages, err := GetAllPages(app.API.ListHighlights, 10, projects...)
+	if err != nil {
+		PrettyPrint(err)
+		return
 	}
-	// fmt.Println(h.Page.TotalCount)
-	Paginate(h.Page, paginateFunc)
+	for _, page := range highlightPages {
+		items = append(items, page)
+	}
+
+	Paginate(items...)
+}
+
+func (app *Application) DisplayProjects() {
+	var items []Printable
+	projectPages, err := app.GetAllProjects(10)
+	if err != nil {
+		PrettyPrint(err)
+	}
+
+	for _, page := range projectPages {
+		items = append(items, page)
+	}
+
+	Paginate(items...)
+}
+
+func (app *Application) DisplayInsights() {
+	projects := app.FilterProjects()
+	var items []Printable
+
+	projectPages, err := GetAllPages(app.API.ListInsights, 10, projects...)
+	if err != nil {
+		PrettyPrint(err)
+		return
+	}
+	for _, page := range projectPages {
+		items = append(items, page)
+	}
+
+	Paginate(items...)
 }
 
 func (app *Application) GetResponse(choice string) {
@@ -150,11 +191,11 @@ func (app *Application) GetResponse(choice string) {
 	case "token":
 		PrettyPrint(app.API.TokenInfo())
 	case "highlights":
-		app.ChooseHighlights()
+		app.DisplayHighlights()
 	case "insights":
-		PrettyPrint(app.API.ListInsights(""))
+		app.DisplayInsights()
 	case "projects":
-		PrettyPrint(app.API.ListProjects())
+		app.DisplayProjects()
 	case "notes":
 		app.ChooseNotes()
 	case "files":

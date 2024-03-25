@@ -19,11 +19,11 @@ type ListHighlights struct {
 	Page Page
 }
 
-func (api *API) ListHighlights(page string, projects ...string) (*ListHighlights, *APIError) {
+func (api *API) ListHighlights(page string, limit uint8, projects ...string) (*ListHighlights, *APIError) {
 	var apiResponse ListHighlights
 	var apiError APIError
 
-	url := api.Routes.Highlights + JoinQueryParams(page, projects...)
+	url := api.Routes.Highlights + JoinQueryParams(page, limit, projects...)
 
 	res := api.SendRequest(http.MethodGet, url, nil)
 
@@ -44,4 +44,8 @@ func (h *ListHighlights) Print() {
 			fmt.Printf("Text: %v\n\n", *highlight.Text)
 		}
 	}
+}
+
+func (h *ListHighlights) NextPage() Page {
+	return h.Page
 }

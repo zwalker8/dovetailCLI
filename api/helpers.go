@@ -17,9 +17,6 @@ func DecodeResponse[D any, E any](res *http.Response, dst *D, errorStruct *E) (*
 			log.Fatal(err)
 		}
 
-		// PrettyPrint(errorStruct)
-
-		// fmt.Printf("%+v", errorStruct)
 		return nil, errorStruct
 	}
 
@@ -28,22 +25,25 @@ func DecodeResponse[D any, E any](res *http.Response, dst *D, errorStruct *E) (*
 		log.Fatal(err)
 	}
 
-	// PrettyPrint(dst)
-	// fmt.Printf("%+v", dst)
-
 	return dst, nil
 }
 
-func JoinQueryParams(page string, projects ...string) string {
+func JoinQueryParams(page string, limit uint8, projects ...string) string {
+	var limitParam string
 	var pageParam string
 	var projectParams string
 	var projectQueryStrtings []string
-	query := "?"
-	seperator := "&"
+	var querylist []string
 
 	if page != "" {
 		pageParam += fmt.Sprintf("page[start_cursor]=%v", page)
 	}
+
+	if limit > 100 {
+		limit = 100
+	}
+
+	limitParam += fmt.Sprintf("page[limit]=%v", limit)
 
 	if len(projects) != 0 {
 		for index, id := range projects {
@@ -56,14 +56,16 @@ func JoinQueryParams(page string, projects ...string) string {
 		projectParams += strings.Join(projectQueryStrtings, "&")
 	}
 
-	if page == "" || len(projects) == 0 {
-		seperator = ""
-		if page == "" && len(projects) == 0 {
-			query = ""
+	querylist = append(querylist, pageParam, limitParam, projectParams)
+	queryString := "?"
+	for i, param := range querylist {
+		if param != "" {
+			queryString += param
+			if i != len(querylist)-1 {
+				queryString += "&"
+			}
 		}
 	}
 
-	fmt.Println(query + pageParam + seperator + projectParams)
-
-	return query + pageParam + seperator + projectParams
+	return queryString
 }
