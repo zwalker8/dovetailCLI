@@ -30,4 +30,7 @@ func main() {
 	}
 
 	app.MainMenu()
+
+	// fmt.Println(os.Getenv("DOVETAIL_API_KEY"))
+	// os.LookupEnv()
 }

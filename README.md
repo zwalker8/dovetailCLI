@@ -50,6 +50,11 @@ echo "API_KEY=\"YOUR KEY GOES HERE\"" > .env
 ```
 echo "API_KEY=""YOUR KEY GOES HERE""" > .env
 ```
+* Install all included packages
+```
+go mod tidy
+```
+
 * Run the program 
 ```
 go run $(pwd)/cmd/cli

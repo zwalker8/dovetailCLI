@@ -2,12 +2,10 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"reflect"
 
 	"github.com/charmbracelet/huh"
-	"github.com/joho/godotenv"
 	"github.com/zwalker8/dovetailCLI/api"
 )
 
@@ -19,8 +17,6 @@ type MultiPage interface {
 	NextPage() api.Page
 }
 
-type PaginateFunc func(string, uint8) (*string, *api.APIError)
-
 func PrettyPrint(inputs ...Printable) {
 	for _, input := range inputs {
 		nilStruct := reflect.ValueOf(input).IsNil()
@@ -31,12 +27,23 @@ func PrettyPrint(inputs ...Printable) {
 }
 
 func GetAPIKEY() string {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatalf("Error loading .env file: %s", err)
+	var key string
+
+	key, exists := os.LookupEnv("DOVETAIL_API_KEY")
+	if exists && key != "" {
+		return key
 	}
 
-	return os.Getenv("API_KEY")
+	for key == "" {
+		huh.NewInput().
+			Title("What is your API key?").
+			Prompt(">").
+			Value(&key).Run()
+	}
+
+	os.Setenv("DOVETAIL_API_KEY", key)
+
+	return key
 }
 
 func Paginate(pages ...Printable) {
@@ -65,16 +72,16 @@ func Paginate(pages ...Printable) {
 				huh.NewOption("Menu", "menu"),
 			).Value(&choice))).Run()
 		} else if currPage == pageCount-1 {
-			huh.NewSelect[string]().Title(fmt.Sprintf("(%v/%v)", currPage+1, pageCount)).Options(
+			huh.NewForm(huh.NewGroup(huh.NewSelect[string]().Title(fmt.Sprintf("(%v/%v)", currPage+1, pageCount)).Options(
 				huh.NewOption("Prev", "prev"),
 				huh.NewOption("Menu", "menu"),
-			).Value(&choice).Run()
+			).Value(&choice))).Run()
 		} else if currPage > 0 && currPage < pageCount-1 {
-			huh.NewSelect[string]().Title(fmt.Sprintf("(%v/%v)", currPage+1, pageCount)).Options(
+			huh.NewForm(huh.NewGroup(huh.NewSelect[string]().Title(fmt.Sprintf("(%v/%v)", currPage+1, pageCount)).Options(
 				huh.NewOption("Next", "next"),
 				huh.NewOption("Prev", "prev"),
 				huh.NewOption("Menu", "menu"),
-			).Value(&choice).Run()
+			).Value(&choice))).Run()
 		}
 
 		switch choice {
